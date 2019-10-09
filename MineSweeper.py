@@ -72,18 +72,32 @@ def doCalculations(spacing):
     x, y = pyautogui.position()
     pixelColor = pyautogui.screenshot().getpixel((x, y))
     if pixelColor in possibleColors:
-        checkNeighbors(possibleColors.index(pixelColor) + 1, spacing)
+        flagNeighbors(possibleColors.index(pixelColor) + 1, spacing)
 
-def checkNeighbors(blockNumber, spacing):
-    x,y = pyautogui.position()
+def flagNeighbors(blockNumber, spacing):
+    origX,origY = pyautogui.position()
     movePairs = [(0, -spacing),(spacing, 0),(0,spacing),(0,spacing),(-spacing,0),(-spacing,0),
                  (0,-spacing),(0,-spacing),(spacing,spacing)]
-
+    greenSquares = [(185,221,119),(191,225,125)]
+    greenAmt = 0
+    redAmt = 0
+    pyautogui.move(-10,-12)
     for pair in movePairs:
         pyautogui.move(pair[0],pair[1])
-
-
-
+        x, y = pyautogui.position()
+        pixelColor = pyautogui.screenshot().getpixel((x, y))
+        if pixelColor in greenSquares:
+            greenAmt += 1
+        if pixelColor == (242, 54, 7):
+            redAmt += 1
+    if (redAmt + greenAmt) <= blockNumber and redAmt != blockNumber:
+        for pair in movePairs:
+            pyautogui.move(pair[0], pair[1])
+            x, y = pyautogui.position()
+            pixelColor = pyautogui.screenshot().getpixel((x, y))
+            if pixelColor in greenSquares:
+                pyautogui.click(button='right')
+    pyautogui.moveTo(origX,origY)
 
 
 
