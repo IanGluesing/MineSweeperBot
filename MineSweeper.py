@@ -38,8 +38,9 @@ def setUpGame():
         height = 20
         spacing = 25
         biasX = 1
-        biasY = 4.5# 7 pretty good
-        return hard_coords, width, height, spacing, biasX, biasY
+        biasY = -5# 7 pretty good
+        redFlag = [-5,-8]
+        return hard_coords, width, height, spacing, biasX, biasY, redFlag
 
 
 # Coordinates of the game using googles built in minesweeper game
@@ -56,21 +57,28 @@ def startGame():
                      random.randrange(coords[1] + 100,coords[3] - 100))
     pyautogui.click()
     time.sleep(3)
-
-    x = coords[0] + (spacing/2) + biasX
-    y = coords[1] + (spacing/2) + biasY
     screenShot = pyautogui.screenshot()
-    doCalculations(spacing, redFlag)
-    for i in range(height):
-        for j in range(width):
-            x += spacing
-            y += 0
-            doCalculations(spacing, redFlag)
-            # send pixel color to method that does something with it
 
-        x += -width * spacing
-        y += spacing
+    while True:
+        x = coords[0] + (spacing/2) + biasX
+        y = coords[1] + (spacing/2) + biasY
+        pyautogui.moveTo(10,10)
+        time.sleep(.5)
+        screenShot = pyautogui.screenshot()
         doCalculations(spacing, redFlag)
+        for i in range(height):
+            for j in range(width):
+                x += spacing
+                y += 0
+                doCalculations(spacing, redFlag)
+                # send pixel color to method that does something with it
+
+            x += -width * spacing
+            y += spacing
+            doCalculations(spacing, redFlag)
+            # print(str(x) + " " + str(y))
+
+
 
 
 def doCalculations(spacing, redFlag):
@@ -105,36 +113,61 @@ def flagNeighbors(blockNumber, spacing, redFlag):
             greenAmt += 1
         if pixelColor in redSquares:
             redAmt += 1
-            if redAmt == blockNumber:
-                break
-        if greenAmt > blockNumber or greenAmt + redAmt > blockNumber:
+        if redAmt == blockNumber:
+            x, y = origX, origY
+            clickGreenBoxes(spacing,redFlag,redAmt)
+            break
+        if greenAmt > blockNumber and redAmt < blockNumber:
             x, y = origX, origY
             return
     rightClicks = 0
+    clickLocations = []
     if (redAmt + greenAmt) <= blockNumber and redAmt != blockNumber:
         for pair in movePairs:
             x += pair[0]
             y += pair[1]
             pixelColor = screenShot.getpixel((x, y))
             if pixelColor in greenSquares:
-                pyautogui.moveTo(x,y)
-                pyautogui.click(button='right')
-                # pyautogui.moveTo(10,10)
-                time.sleep(.3)
-                screenShot = pyautogui.screenshot()
+                clickLocations.append([x,y])
                 rightClicks += 1
             if rightClicks == greenAmt:
                 break
+    for location in clickLocations:
+        pyautogui.moveTo(location[0],location[1])
+        pyautogui.click(button='right')
+        time.sleep(.25)
+    screenShot = pyautogui.screenshot()
     x, y, = origX, origY
+
+    # print(redAmt - 1)
+    # time.sleep(4)
+    if rightClicks == blockNumber:
+        clickGreenBoxes(spacing, redFlag, redAmt)
 
     #Everything above here is for flagging neaighbors if they should be flagged
 
+def clickGreenBoxes(spacing, redFlag, redAmt):
+    global screenShot, x, y
 
+    origX, origY = x, y
 
+    movePairs = [(-spacing, -spacing), (spacing, 0), (spacing, 0), (0, spacing), (0, spacing),
+                 (-spacing, 0), (-spacing, 0), (0, -spacing), (spacing, 0)]
 
+    greenSquares = [(162, 209, 73),(170, 215, 81)]
 
+    x += redFlag[0]
+    y += redFlag[1]
+    for pair in movePairs:
+        x += pair[0]
+        y += pair[1]
+        pixelColor = screenShot.getpixel((x, y))
+        if pixelColor in greenSquares:
+            pyautogui.moveTo(x,y)
+            pyautogui.click()
 
-
+    screenShot = pyautogui.screenshot()
+    x, y, = origX, origY
 
 
 startGame()
