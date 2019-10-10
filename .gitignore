@@ -1,2 +1,3 @@
-MineSweeperBot/venv
-MineSweeperBot/.idea
+venv
+.idea
+test.py
