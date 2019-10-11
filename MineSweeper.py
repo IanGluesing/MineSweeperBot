@@ -56,14 +56,12 @@ def startGame():
     pyautogui.moveTo(random.randrange(coords[0] + 100, coords[2] - 100),
                      random.randrange(coords[1] + 100,coords[3] - 100))
     pyautogui.click()
-    time.sleep(3)
+    time.sleep(2)
     screenShot = pyautogui.screenshot()
 
     while True:
         x = coords[0] + (spacing/2) + biasX
         y = coords[1] + (spacing/2) + biasY
-        pyautogui.moveTo(10,10)
-        time.sleep(.5)
         screenShot = pyautogui.screenshot()
         doCalculations(spacing, redFlag)
         for i in range(height):
@@ -84,12 +82,19 @@ def startGame():
 def doCalculations(spacing, redFlag):
     global screenShot, x, y
     # [(1),(2),(3),(4),....]
-    possibleColors = [(25, 118, 210),(56, 142, 60),(211, 47, 47),(123, 31, 162),(255,143,0)]
+    possibleColors = [(25, 118, 210),(56, 142, 60),(211, 47, 47),(136, 51, 161),(255,143,0)]
+    alternateColors = [(140, 57, 165),(156, 85, 159),(123, 31, 162),(161, 88, 161),
+                       (134, 49, 161),(136, 51, 161)]
     # add up values of the incoming color and see if they are in a certain range
     # and then based on that number do stuff
     pixelColor = screenShot.getpixel((x, y))
     if pixelColor in possibleColors:
         flagNeighbors(possibleColors.index(pixelColor) + 1, spacing, redFlag)
+        clickGreenBoxes(possibleColors.index(pixelColor) + 1, spacing, redFlag)
+        return
+    elif pixelColor in alternateColors:
+        flagNeighbors(4, spacing, redFlag)
+        clickGreenBoxes(4, spacing, redFlag)
 
 
 def flagNeighbors(blockNumber, spacing, redFlag):
@@ -114,12 +119,17 @@ def flagNeighbors(blockNumber, spacing, redFlag):
         if pixelColor in redSquares:
             redAmt += 1
         if redAmt == blockNumber:
-            x, y = origX, origY
-            clickGreenBoxes(spacing,redFlag,redAmt)
-            break
+            x, y, = origX, origY
+            return
+        # if redAmt == blockNumber:
+        #     x, y = origX, origY
+        #     clickGreenBoxes(spacing,redFlag,redAmt)
+        #     x, y = origX, origY
+        #     return
         if greenAmt > blockNumber and redAmt < blockNumber:
             x, y = origX, origY
             return
+
     rightClicks = 0
     clickLocations = []
     if (redAmt + greenAmt) <= blockNumber and redAmt != blockNumber:
@@ -135,43 +145,46 @@ def flagNeighbors(blockNumber, spacing, redFlag):
     for location in clickLocations:
         pyautogui.moveTo(location[0],location[1])
         pyautogui.click(button='right')
-        time.sleep(.25)
+    time.sleep(.25)
     screenShot = pyautogui.screenshot()
     x, y, = origX, origY
 
-    # print(redAmt - 1)
-    # time.sleep(4)
-    if rightClicks == blockNumber:
-        clickGreenBoxes(spacing, redFlag, redAmt)
-
     #Everything above here is for flagging neaighbors if they should be flagged
 
-def clickGreenBoxes(spacing, redFlag, redAmt):
+def clickGreenBoxes(blockNumber, spacing, redFlag):
     global screenShot, x, y
-
     origX, origY = x, y
 
     movePairs = [(-spacing, -spacing), (spacing, 0), (spacing, 0), (0, spacing), (0, spacing),
                  (-spacing, 0), (-spacing, 0), (0, -spacing), (spacing, 0)]
-
-    greenSquares = [(162, 209, 73),(170, 215, 81)]
+    greenSquares, redSquares = [(162, 209, 73),(170, 215, 81)], [(230,51,7),(242, 54, 7)]
 
     x += redFlag[0]
     y += redFlag[1]
+
+    redNum = 0
     for pair in movePairs:
         x += pair[0]
         y += pair[1]
         pixelColor = screenShot.getpixel((x, y))
-        if pixelColor in greenSquares:
-            pyautogui.moveTo(x,y)
-            pyautogui.click()
+        if pixelColor in redSquares:
+            redNum += 1
+
+    x, y, = origX, origY
+
+    if redNum == blockNumber:
+        x += redFlag[0]
+        y += redFlag[1]
+        for pair in movePairs:
+            x += pair[0]
+            y += pair[1]
+            pixelColor = screenShot.getpixel((x, y))
+            if pixelColor in greenSquares:
+                pyautogui.moveTo(x,y)
+                pyautogui.click()
 
     screenShot = pyautogui.screenshot()
     x, y, = origX, origY
 
 
 startGame()
-
-
-
-# go through each box of the game and figure out its number
